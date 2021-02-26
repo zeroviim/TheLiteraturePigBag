@@ -55,6 +55,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.rtb_DialogByteDisplay = new System.Windows.Forms.RichTextBox();
             this.TEST_btn_findWFMFiles = new System.Windows.Forms.Button();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
             ((System.ComponentModel.ISupportInitialize)(this.pcbx_GlyphImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pcbx_GlyphScaled)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pcbx_TextBubble)).BeginInit();
@@ -133,7 +134,7 @@
             // lsbx_GlyphAsciiOutput
             // 
             this.lsbx_GlyphAsciiOutput.FormattingEnabled = true;
-            this.lsbx_GlyphAsciiOutput.Location = new System.Drawing.Point(992, 266);
+            this.lsbx_GlyphAsciiOutput.Location = new System.Drawing.Point(734, 187);
             this.lsbx_GlyphAsciiOutput.Name = "lsbx_GlyphAsciiOutput";
             this.lsbx_GlyphAsciiOutput.Size = new System.Drawing.Size(120, 238);
             this.lsbx_GlyphAsciiOutput.TabIndex = 6;
@@ -177,7 +178,7 @@
             // 
             this.lbl_desc_AsciiOutput.AutoSize = true;
             this.lbl_desc_AsciiOutput.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_desc_AsciiOutput.Location = new System.Drawing.Point(992, 247);
+            this.lbl_desc_AsciiOutput.Location = new System.Drawing.Point(734, 168);
             this.lbl_desc_AsciiOutput.Name = "lbl_desc_AsciiOutput";
             this.lbl_desc_AsciiOutput.Size = new System.Drawing.Size(82, 16);
             this.lbl_desc_AsciiOutput.TabIndex = 20;
@@ -229,12 +230,12 @@
             this.pcbx_TextBubble.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.pcbx_TextBubble.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(244)))), ((int)(((byte)(221)))));
+            this.pcbx_TextBubble.BackColor = System.Drawing.Color.White;
             this.pcbx_TextBubble.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.pcbx_TextBubble.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.pcbx_TextBubble.Location = new System.Drawing.Point(122, 40);
             this.pcbx_TextBubble.Name = "pcbx_TextBubble";
-            this.pcbx_TextBubble.Size = new System.Drawing.Size(260, 86);
+            this.pcbx_TextBubble.Size = new System.Drawing.Size(988, 86);
             this.pcbx_TextBubble.TabIndex = 27;
             this.pcbx_TextBubble.TabStop = false;
             // 
@@ -264,11 +265,12 @@
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tabControl1.Location = new System.Drawing.Point(43, 164);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(633, 392);
+            this.tabControl1.Size = new System.Drawing.Size(1139, 392);
             this.tabControl1.TabIndex = 30;
             // 
             // tabPage1
@@ -283,7 +285,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 23);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(625, 365);
+            this.tabPage1.Size = new System.Drawing.Size(1131, 365);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Character";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -302,7 +304,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 23);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(625, 365);
+            this.tabPage2.Size = new System.Drawing.Size(1131, 365);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Dialog";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -357,11 +359,21 @@
             this.TEST_btn_findWFMFiles.UseVisualStyleBackColor = true;
             this.TEST_btn_findWFMFiles.Click += new System.EventHandler(this.TEST_btn_findWFMFiles_Click);
             // 
+            // tabPage3
+            // 
+            this.tabPage3.Location = new System.Drawing.Point(4, 23);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage3.Size = new System.Drawing.Size(1131, 365);
+            this.tabPage3.TabIndex = 2;
+            this.tabPage3.Text = "Compare Dialog";
+            this.tabPage3.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(735, 588);
+            this.ClientSize = new System.Drawing.Size(1163, 566);
             this.Controls.Add(this.TEST_btn_findWFMFiles);
             this.Controls.Add(this.lsbx_GlyphAsciiOutput);
             this.Controls.Add(this.tabControl1);
@@ -371,7 +383,7 @@
             this.Controls.Add(this.btn_SelectFile);
             this.Controls.Add(this.lbl_FilePath);
             this.Name = "Form1";
-            this.Text = "The Literature Pig Bag V0.4";
+            this.Text = "The Literature Pig Bag V0.5";
             ((System.ComponentModel.ISupportInitialize)(this.pcbx_GlyphImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pcbx_GlyphScaled)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pcbx_TextBubble)).EndInit();
@@ -414,6 +426,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button TEST_btn_findWFMFiles;
         private System.Windows.Forms.Button btn_Shitpost;
+        private System.Windows.Forms.TabPage tabPage3;
     }
 }
 

@@ -11,20 +11,23 @@ using System.Windows.Forms;
 
 namespace WFM_Output
 {
-    //TODO: D0FF files are text, D1FF are event cubes, figure out how to tell difference to actually handle both properly
-    //TODO: read files from iso directly instead of needing exported WFM files
-    //TODO: wfm1/2 support
-    //TODO: Add 16 word(2byte) per row dialog byte display on front end
-    //TODO: Add support for FreeMono instead of Courier font, test for backup/missing font too https://en.wikipedia.org/wiki/GNU_FreeFont
-    //TODO: full font export, pooling all glyphs together into one sheet
-    //TODO: XML Logging of glyph-typed character relationship for editing and plaintext output
-
+    //TODO: read files from iso directly instead of needing exported WFM files (I have a c# iso file extractor+decompression, just need unLDAR iirc)
+    //TODO: wfm1/2 support + pre8 support (not started, need sample files, also pre8 isn't even in wfm format so have fun with that)
+    //pre8 support also supports the messages on the map, the status screen, and item names
+    //TODO: Add 16 word(2byte) per row dialog byte display on front end (mostly done, could use human readable text explaining what control characters do)
+    //TODO: Add support for FreeMono instead of Courier font, test for backup/missing font too https://en.wikipedia.org/wiki/GNU_FreeFont (not started)
+    //TODO: full font export, pooling all glyphs together into one sheet (working on pulling all wfm glyph data together still)
+    //TODO: XML Logging of glyph-typed character relationship for editing and plaintext output (there are remnants of debug messages that can be used as a base for this, but hasnt been worked on yet)
+    //TODO: Recoding the bitmap generation of the dialog so it can properly draw transparency where glyphs stop if there is whitespace
+    //TODO: drawing method only uses the list now, rename the list(currently palettedata or something) to be moe fitting and remove the textpixel array
+    //TODO: proper dialog drawing routine for the bitmap object, where it is done by glyph instead of scanning the bitmap by x,y
 
     public partial class Form1 : Form
     {
         GlyphData glyphData;
         GlyphImage[] glyphImage;
         DialogData[] dialogData;
+        List<PaletteData> paletteData;
         int currentBubble = 0;
 
         public Form1()
@@ -144,6 +147,7 @@ namespace WFM_Output
 
         private void lsbx_DialogSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
+            //TODO: fast scrolling throws errors, need to async and make it only update upon a completed one
             rtb_DialogByteDisplay.Clear();
             bool isEvent = false;
             int index = lsbx_DialogIndex.SelectedIndex;
@@ -166,7 +170,7 @@ namespace WFM_Output
             {
                 isEvent = true;
             }
-            Bitmap textbox = dialogData[0].GenerateBitmapTextbox(dialogData[0], textPixels, glyphData, index, isEvent);
+            Bitmap textbox = dialogData[0].GenerateBitmapTextbox(dialogData[0], paletteData, textPixels, glyphData, index, isEvent);
             pcbx_TextBubble.Width = dialogData[0].textboxX;
             pcbx_TextBubble.Height = dialogData[0].textboxY;
             pcbx_TextBubble.Image = textbox;
@@ -189,7 +193,7 @@ namespace WFM_Output
             }
             byte[,] textPixels;
             GenerateTextBubble(index, currentBubble, out textPixels);
-            Bitmap textbox = dialogData[0].GenerateBitmapTextbox(dialogData[0], textPixels, glyphData, index, isEvent);
+            Bitmap textbox = dialogData[0].GenerateBitmapTextbox(dialogData[0], paletteData, textPixels, glyphData, index, isEvent);
             pcbx_TextBubble.Width = dialogData[0].textboxX;
             pcbx_TextBubble.Height = dialogData[0].textboxY;
             pcbx_TextBubble.Image = textbox;
@@ -212,7 +216,7 @@ namespace WFM_Output
             int index = lsbx_DialogIndex.SelectedIndex;
             byte[,] textPixels;
             GenerateTextBubble(index, currentBubble, out textPixels);
-            Bitmap textbox = dialogData[0].GenerateBitmapTextbox(dialogData[0], textPixels, glyphData, index, isEvent);
+            Bitmap textbox = dialogData[0].GenerateBitmapTextbox(dialogData[0], paletteData, textPixels, glyphData, index, isEvent);
             pcbx_TextBubble.Width = dialogData[0].textboxX;
             pcbx_TextBubble.Height = dialogData[0].textboxY;
             pcbx_TextBubble.Image = textbox;
@@ -342,11 +346,32 @@ namespace WFM_Output
         private void btn_Shitpost_Click(object sender, EventArgs e)
         {
             byte[,] textPixels;
-            bool isEvent = true;
-            dialogData[0].dialogBytes = new UInt16[19] { 0x800A, 0x8015, 0x800D, 0x8013, 0x8024, 0x801E, 0x801F, 0x800C, 0x8016, 0x8022, 0x800E, 0x8014, 0x8017, 0x8014, 0x8015, 0x8015, 0x8014, 0x800C, 0xFFFF };
+            bool isEvent = false; 
+            //dialogData[0].dialogBytes = new UInt16[19] { 0x800A, 0x8015, 0x800D, 0x8013, 0x8024, 0x801E, 0x801F, 0x800C, 0x8016, 0x8022, 0x800E, 0x8014, 0x8017, 0x8014, 0x8015, 0x8015, 0x8014, 0x800C, 0xFFFF };
+            dialogData[0].dialogBytes = new UInt16[72] { 0xFFFA,0x00F8,0x0035,
+                                                        0x8068, 0x8043, 0x8043, 0x8067,0x8048, //good
+                                                        0xFFF7, 0x0001,
+                                                        0x8067, 0x8050, 0x805D,0x8048, //day
+                                                        0xFFF7,0x0002,
+                                                        0x8054,0x8060,0x807A,0x8042,0x8074, //TCRF,
+                                                        0xFFFD,
+                                                        0xFFF7,0x0003,
+                                                        0x804C,0x8043,0x8043,0x8071, 0x8048,//look
+                                                        0xFFF7,0x0004,
+                                                        0x8050,0x8047,0x8048, //at
+                                                        0xFFF7,0x0005,
+                                                        0x8065,0x805D, //my
+                                                        0xFFFD,
+                                                        0xFFF7, 0x0006,
+                                                        0x805F,0x8043,0x804C,0x8043,0x8044,0x8049,0x8063,0x804C, 0x8048,//colorful
+                                                        0xFFF7,0x0007,
+                                                        0x8067,0x8061,0x8050,0x804C,0x8043,0x8069,0x8048, //dialog
+                                                        0xFFF7,0x0008,
+                                                        0x805F,0x805E,0x8043,0x8061,0x805F,0x8045,0x8046,0x806A, //selection!
+                                                        0xFFFC,0xFFFB,0xFFFF };
             int index = 0;
             GenerateTextBubble(index, currentBubble, out textPixels);
-            Bitmap textbox = dialogData[0].GenerateBitmapTextbox(dialogData[0], textPixels, glyphData, index, isEvent);
+            Bitmap textbox = dialogData[0].GenerateBitmapTextbox(dialogData[0], paletteData, textPixels, glyphData, index, isEvent);
             pcbx_TextBubble.Width = dialogData[0].textboxX;
             pcbx_TextBubble.Height = dialogData[0].textboxY;
             pcbx_TextBubble.Image = textbox;
@@ -356,12 +381,13 @@ namespace WFM_Output
 
         private void GenerateTextBubble(int selectedIndex, int currentBubble, out byte[,] textPixels)
         {
+            paletteData = new List<PaletteData>();
             int dialogIndex = 0;
             int textBubbleMaxX = 0;
             int textBubbleMaxY = 0;
             int textBubbleCurX = 0;
             int textBubbleCurY = 0;
-            textPixels = new byte[800,800]; //PH value, should never be this if everything works right
+            textPixels = new byte[900,900]; //PH value, should never be this if everything works right
             int arrayX = 0;
             int arrayY = 0;
             int tallestCharacter = 0;
@@ -369,11 +395,17 @@ namespace WFM_Output
             //for multi bubble
             int fffcCheck = 0;
 
+            //for palette
+            int paletteIndex = 0;
+            //for list tracking
+            int listIndex = -1;
+            //TODO: try catch for exceptions
             while (dialogIndex < dialogData[selectedIndex].dialogBytes.Length)
             {
                 UInt16 currentIndex = dialogData[selectedIndex].dialogBytes[dialogIndex];
                 if (currentIndex >= 0xFFF0) //control character
                 {
+                    //paletteIndex = 0;
                     switch (currentIndex)
                     {
                         case 0xFFF0: //unused, takes 2 arguments?
@@ -400,12 +432,14 @@ namespace WFM_Output
                             dialogIndex++;
                             break;
 
-                        case 0xFFF6: //unknown, 2 arguments
+                        case 0xFFF6: //TODO: dialog box initial placement, apparently? 
+                            //two int16 (X,Y)
+                            //0,0 is top left of viewport
                             dialogIndex += 3;
                             break;
 
                         case 0xFFF7: //change color of all following text, argument determines color change
-                            //TODO: Implement palette change
+                            paletteIndex = dialogData[selectedIndex].dialogBytes[dialogIndex + 1];
                             dialogIndex += 2;
                             break;
 
@@ -461,6 +495,7 @@ namespace WFM_Output
                 }
                 if (currentIndex >= 0x0799 && currentIndex <= 0xEFFF) //glyph character
                 {
+                    listIndex += 2;
                     if (fffcCheck == currentBubble)
                     {
                         int glyphPointer = (byte)(currentIndex & 0x0FFF);
@@ -480,8 +515,16 @@ namespace WFM_Output
                                 byte rightNybble = (byte)(glyphImage[glyphPointer].character[widthSegment + pixels] & 0x0F);
                                 byte leftNybble = (byte)(glyphImage[glyphPointer].character[widthSegment + pixels] & 0xF0);
                                 leftNybble = (byte)(leftNybble >> 4);
-                                textPixels[arrayX, arrayY] = rightNybble; //add soon-to-be pixel 1
-                                textPixels[arrayX + 1, arrayY] = leftNybble; //add soon-to-be pixel 2
+                                
+                                var paletteDataAdd1 = new PaletteData() { posX = arrayX, posY = arrayY, colorIndex = paletteIndex, colorPointer = rightNybble };
+                                var paletteDataAdd2 = new PaletteData() { posX = arrayX + 1, posY = arrayY, colorIndex = paletteIndex, colorPointer = leftNybble };
+                                paletteData.Add(paletteDataAdd1);
+                                paletteData.Add(paletteDataAdd2);
+                                //The attempt to 1 line the list.add led to outofbounds exceptions, I dont get why
+                                //textPixels[arrayX, arrayY] = rightNybble; //add soon-to-be pixel 1
+                                //paletteData.Add(new PaletteData() { posX = arrayX, posY = arrayY, colorIndex = paletteIndex, colorPointer = rightNybble });
+                                //textPixels[arrayX + 1, arrayY] = leftNybble; //add soon-to-be pixel 2
+                                //paletteData.Add(new PaletteData() { posX = arrayX + 1, posY = arrayY, colorIndex = paletteIndex, colorPointer = leftNybble });
                                 arrayX += 2;
                             }
                             arrayY++;
@@ -498,6 +541,7 @@ namespace WFM_Output
                 {
                     dialogIndex++;
                 }
+                //dialogData[selectedIndex].paletteColorIndex.Add(paletteIndex);
             }
         }
 
@@ -579,7 +623,7 @@ namespace WFM_Output
                             break;
 
                         case 0xFFF5: //prompt, no arguments, used for SAVE DATA
-                            controlString = dialogData[index].dialogBytes[wordIndex].ToString("X4") + "/r/n";
+                            controlString = dialogData[index].dialogBytes[wordIndex].ToString("X4");
                             rtb_DialogByteDisplay.Text += controlString + "\r\n";
                             wordIndex++;
                             break;
@@ -764,6 +808,14 @@ namespace WFM_Output
         }
     }
 
+    class PaletteData
+    {
+        public int posX;
+        public int posY;
+        public int colorPointer;
+        public int colorIndex;
+    }
+
     class GlyphData
     {
         //HEADER
@@ -936,18 +988,45 @@ namespace WFM_Output
 
     class DialogData
     {
+        public List<int> paletteColorIndex;
         public UInt16 dialogRelativePointer;
         public UInt16[] dialogBytes;
         public int textboxX;
         public int textboxY;
         Color[] colorListNew;
         public int bubbleCount;
+        //public int dialogPaletteIndex = 0;
         //TODO: the rest of the dialogPalettes
         //TODO: CLUT visualization?
-        public byte[] dialogPalette1 = new byte[32] { 0x00, 0x00, 0x00, 0x04, 0x73, 0x4E, 0x29, 0x25,
+        public byte[] dialogPalette0 = new byte[32] { 0x00, 0x00, 0x00, 0x04, 0x73, 0x4E, 0x29, 0x25,
                                            0xAD, 0x35, 0x10, 0x42, 0xA5, 0x14, 0x4D, 0x7E,
                                            0xE0, 0x03, 0x1F, 0x42, 0x7F, 0x29, 0x19, 0x53,
-                                           0x74, 0x46, 0x11, 0x3A, 0x00, 0x00, 0x00, 0x00};
+                                           0x74, 0x46, 0x11, 0x3A, 0x00, 0x00, 0x00, 0x00}; //default
+        public byte[] dialogPalette1 = new byte[32] {0x00, 0x00, 0x16, 0x00, 0x9F, 0x31, 0x19, 0x00, 0x18, 0x00, 0x3B, 0x29,
+                                                0xA5, 0x14, 0x4D, 0x7E, 0xE0, 0x03, 0x1F, 0x42, 0x7F, 0x29, 0x19, 0x53, 0x74,
+                                                0x46, 0x11, 0x3A, 0x00, 0x00, 0x00, 0x00 }; //red palette
+        public byte[] dialogPalette2 = new byte[32] { 0x00, 0x00, 0x20, 0x67, 0xF0, 0x7F, 0x63, 0x6F, 0x30, 0x67, 0x75, 0x6F, 0xA5,
+                                                      0x14, 0x4D, 0x7E, 0xE0, 0x03, 0x1F, 0x42, 0x7F, 0x29, 0x19, 0x53, 0x74, 0x46,
+                                                      0x11, 0x3A, 0x00, 0x00, 0x00, 0x00 }; //teal
+        public byte[] dialogPalette3 = new byte[32] { 0x00, 0x00, 0x16, 0x58, 0x36, 0x5A, 0x18, 0x60, 0xDA, 0x68, 0xBA, 0x69, 0xA5, 0x14,
+                                                        0x4D, 0x7E, 0xE0, 0x03, 0x1F, 0x42, 0x7F, 0x29, 0x19, 0x53, 0x74, 0x46, 0x11, 0x3A,
+                                                        0x00, 0x00, 0x00, 0x00 }; //purple?
+        public byte[] dialogPalette4 = new byte[32] { 0x00, 0x00, 0x00, 0x03, 0xB4, 0x53, 0x40, 0x03,
+                                                    0x8B, 0x2F, 0xB2, 0x4B, 0xA5, 0x14, 0x4D, 0x7E, 0xE0,
+                                                    0x03, 0x1F, 0x42, 0x7F, 0x29, 0x19, 0x53, 0x74, 0x46, 0x11,
+                                                    0x3A, 0x00, 0x00, 0x00, 0x00 };
+        public byte[] dialogPalette5 = new byte[32] { 0x00, 0x00, 0x00, 0x60, 0x73, 0x6A, 0x00, 0x70, 0x29, 0x71, 0x10, 0x6A, 0xA5, 0x14,
+                                                      0x4D, 0x7E, 0xE0, 0x03, 0x1F, 0x42, 0x7F, 0x29, 0x19, 0x53, 0x74, 0x46,
+                                                        0x11, 0x3A, 0x00, 0x00, 0x00, 0x00 };
+        public byte[] dialogPalette6 = new byte[32] { 0x00, 0x00, 0xBF, 0x01, 0xFF, 0x4A, 0x1F, 0x02, 0x3F, 0x0E, 0xBF,
+                                                      0x2E, 0xA5, 0x14, 0x4D, 0x7E, 0xE0, 0x03, 0x1F, 0x42, 0x7F, 0x29, 0x19, 0x53,
+                                                      0x74, 0x46, 0x11, 0x3A, 0x00, 0x00 , 0x00, 0x00 };
+        public byte[] dialogPalette7 = new byte[32] { 0x00, 0x00, 0x1F, 0x55, 0x7F, 0x5E, 0xFF, 0x64, 0x9F, 0x69, 0x1F, 0x5E,
+                                                      0xA5, 0x14, 0x4D, 0x7E, 0xE0, 0x03, 0x1F, 0x42, 0x7F, 0x29, 0x19, 0x53,
+                                                      0x74, 0x46, 0x11, 0x3A, 0x00, 0x00, 0x00, 0x00 };
+        public byte[] dialogPalette8 = new byte[32] { 0x00, 0x00, 0xDD, 0x02, 0xDF, 0x43, 0xFF, 0x16, 0x3F, 0x27,
+                                                      0x7F, 0x4F, 0xA5, 0x14, 0x4D, 0x7E, 0xE0, 0x03, 0x1F, 0x42,
+                                                      0x7F, 0x29, 0x19, 0x53, 0x74, 0x46, 0x11, 0x3A, 0x00, 0x00, 0x00, 0x00 };
         public byte[] eventPalette1 = new byte[32] { 0xFF, 0x01, 0x00, 0x84, 0xFF, 0x7F, 0xEF, 0x3D,
                                            0x29, 0x25, 0xB5, 0x56, 0xF0, 0x00, 0x98, 0x01,
                                            0x39, 0x67, 0x34, 0x01, 0xFF, 0x01, 0x00, 0x7C,
@@ -982,11 +1061,12 @@ namespace WFM_Output
                 alpha8bit = (byte)((byte1 & 0x80) >> 7); //isolate first bit, and move it to last position
                 /*if (alpha8bit == 0)
                 {
-                    alpha = 100;
+                    //alpha = 100;
+                    alpha = 0;
                 }
                 else
                 {
-                    alpha = 0;
+                    alpha = 100;
                 }*/
                 alpha = alpha8bit * 100;
                 tempByte1 = (byte)(byte1 << 1);
@@ -1006,7 +1086,7 @@ namespace WFM_Output
                 green8Bit = (green5Bit * 255) / 31;
                 blue8Bit = (blue5Bit * 255) / 31;
                 Color color = new Color();
-                //color = Color.FromArgb(alpha, blue8Bit, green8Bit, red8Bit); you'd think this would work, and it should, but its wrong and I dont know why alpha isnt defined properly despite the bit existing
+                //color = Color.FromArgb(alpha, blue8Bit, green8Bit, red8Bit); //you'd think this would work, and it should, but its wrong and I dont know why alpha isnt defined properly despite the bit existing
                 if (blue8Bit == 0 && red8Bit == 0 && green8Bit == 0)
                 {
                     color = Color.FromArgb(alpha, blue8Bit, green8Bit, red8Bit);
@@ -1020,33 +1100,77 @@ namespace WFM_Output
             }
         }
 
-        public Bitmap GenerateBitmapTextbox(DialogData dialogData, byte[,] textPixels, GlyphData glyphData, int arrayPos, bool isEvent)
+        public Bitmap GenerateBitmapTextbox(DialogData dialogData, List<PaletteData> paletteData, byte[,] textPixels, GlyphData glyphData, int index, bool isEvent)
         {
+            //List<Order> SortedList = objListOrder.OrderBy(o=>o.OrderDate).ToList();
+            List<PaletteData> sortedpaletteData = paletteData.OrderBy(y => y.posY).ToList();
+            int paletteSwapCheck = 0;
             if (isEvent == true)
             {
-                GeneratePalette(dialogData.eventPalette1);
+                GeneratePalette(eventPalette1);
             }
             else
             {
-                GeneratePalette(dialogData.dialogPalette1); //this should populate the glyphImage colorListNew property
+                GeneratePalette(dialogPalette0);
+                //this should populate the glyphImage colorListNew property
             }
             //todo figure out a way to calculate the width of the event boxes/current X/Y totals
             //this is for event box handling
             if (textboxX == 0)
             {
-                textboxX = 400;
+                textboxX = 900;
             }
             if (textboxY == 0)
             {
                 textboxY = 64;
             }
             Bitmap textbox = new Bitmap(textboxX, textboxY);
-
-            for (int y = 0; y < textboxY; y++)
+            for (int i = 0; i < sortedpaletteData.Count; i++)
             {
-                for (int x = 0; x < textboxX; x++)
+                int paletteIndexCheck = sortedpaletteData[i].colorIndex;
+                if (paletteIndexCheck != paletteSwapCheck)
                 {
-                    textbox.SetPixel(x, y, colorListNew[textPixels[x, y]]);
+                    if (paletteIndexCheck != paletteSwapCheck)
+                    {
+                        paletteSwapCheck = paletteIndexCheck;
+                        switch (paletteSwapCheck)
+                        {
+                            case 0:
+                                GeneratePalette(dialogPalette0);
+                                break;
+                            case 1:
+                                GeneratePalette(dialogPalette1);
+                                break;
+                            case 2:
+                                GeneratePalette(dialogPalette2);
+                                break;
+                            case 3:
+                                GeneratePalette(dialogPalette3);
+                                break;
+                            case 4:
+                                GeneratePalette(dialogPalette4);
+                                break;
+                            case 5:
+                                GeneratePalette(dialogPalette5);
+                                break;
+                            case 6:
+                                GeneratePalette(dialogPalette6);
+                                break;
+                            case 7:
+                                GeneratePalette(dialogPalette7);
+                                break;
+                            case 8:
+                                GeneratePalette(dialogPalette8);
+                                break;
+                            default:
+                                GeneratePalette(dialogPalette0);
+                                break;
+                        }
+                    }
+                }
+                if (sortedpaletteData[i].posX < textboxX && sortedpaletteData[i].posY < textboxY)
+                {
+                    textbox.SetPixel(sortedpaletteData[i].posX, sortedpaletteData[i].posY, colorListNew[sortedpaletteData[i].colorPointer]);
                 }
             }
             return textbox;
